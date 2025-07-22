@@ -26,7 +26,11 @@ SECRET_KEY = 'django-insecure-7+*uia0)uzc-twx^55gsur7hpkueh*@v8rh6-)kj3va)&+n3he
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['skill-vault-api-production.up.railway.app', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'skill-vault-api-production-f6fb.up.railway.app',
+]
 
 
 # Application definition
