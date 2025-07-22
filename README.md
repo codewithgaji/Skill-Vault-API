@@ -1,4 +1,4 @@
-![Skill Vault Banner](path_or_url_to_image)
+![Skill Vault Banner](SkillVault.png)
 
 
 # 🛠️ Skill Vault API
