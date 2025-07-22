@@ -1,0 +1,276 @@
+{% block content %} {% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gaji Yaqub Ayomikun - Django Developer Journey</title>
+    <link rel="stylesheet" href="{% static 'about.css'%}" />
+    <link
+      rel="shortcut icon"
+      href="{% static 'images/SkillApi.png' %}"
+      type="image/x-icon"
+    />
+  </head>
+  <body>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <div class="profile-image-container">
+          <img
+            src="{% static 'images/Gaji.jpg' %}"
+            alt="Gaji Yaqub Ayomikun"
+            class="profile-image"
+            id="profileImage"
+          />
+          <div class="image-overlay"></div>
+        </div>
+        <h1 class="hero-title">Gaji Yaqub Ayomikun</h1>
+        <p class="hero-subtitle">Django Backend Developer</p>
+        <div class="typing-animation">
+          <span id="typing-text"></span>
+          <span class="cursor">|</span>
+        </div>
+      </div>
+      <div class="floating-icons">
+        <div class="icon python">🐍</div>
+        <div class="icon django">🚀</div>
+        <div class="icon database">🗄️</div>
+        <div class="icon api">⚡</div>
+      </div>
+    </section>
+
+    <!-- Journey Section -->
+    <section class="journey">
+      <div class="container">
+        <h2 class="section-title">My Django Journey</h2>
+
+        <div class="journey-card current">
+          <div class="card-icon">🎯</div>
+          <h3>Current Project: SkillVault CRUD</h3>
+          <p>
+            Building a complete CRUD application with Django backend and dynamic
+            frontend. Successfully implemented:
+          </p>
+          <ul>
+            <li>✅ Django REST API endpoints</li>
+            <li>✅ User management system</li>
+            <li>✅ Skills tracking with full CRUD operations</li>
+            <li>✅ Frontend integration using AI assistance</li>
+          </ul>
+          <div class="tech-stack">
+            <span class="tech-tag">Django</span>
+            <span class="tech-tag">Python</span>
+            <span class="tech-tag">JavaScript</span>
+            <span class="tech-tag">HTML/CSS</span>
+            <span class="tech-tag">REST API</span>
+          </div>
+        </div>
+
+        <div class="journey-card">
+          <div class="card-icon">📚</div>
+          <h3>Learning Timeline</h3>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <h4>5 Months Ago</h4>
+                <p>Started learning Django from scratch</p>
+              </div>
+            </div>
+            <div class="timeline-item active">
+              <div class="timeline-dot"></div>
+              <div class="timeline-content">
+                <h4>Now</h4>
+                <p>Building full CRUD applications with confidence</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="journey-card future">
+          <div class="card-icon">🚀</div>
+          <h3>Next Steps & Goals</h3>
+          <div class="goals-grid">
+            <div class="goal-item">
+              <div class="goal-icon">🔐</div>
+              <h4>Authentication & JWT</h4>
+              <p>
+                Implementing secure user authentication and token-based
+                authorization
+              </p>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon">🌐</div>
+              <h4>Advanced Backend</h4>
+              <p>
+                Exploring complex Django features, middleware, and optimization
+              </p>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon">🖥️</div>
+              <h4>Server Administration</h4>
+              <p>Learning server-side management and deployment strategies</p>
+            </div>
+            <div class="goal-item">
+              <div class="goal-icon">⚙️</div>
+              <h4>DevOps Integration</h4>
+              <p>Mastering CI/CD, containerization, and cloud deployment</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Philosophy Section -->
+    <section class="philosophy">
+      <div class="container">
+        <h2 class="section-title">Development Philosophy</h2>
+        <div class="philosophy-content">
+          <div class="philosophy-card">
+            <div class="philosophy-icon">🤖</div>
+            <h3>AI-Assisted Development</h3>
+            <p>
+              Leveraging AI tools to accelerate learning and development. Smart
+              developers use all available resources to build better solutions
+              faster.
+            </p>
+          </div>
+          <div class="philosophy-card">
+            <div class="philosophy-icon">🔧</div>
+            <h3>Problem-Solving Focus</h3>
+            <p>
+              Every bug is a learning opportunity. From HTTP 400 errors to field
+              validation issues - each challenge builds stronger development
+              skills.
+            </p>
+          </div>
+          <div class="philosophy-card">
+            <div class="philosophy-icon">🌱</div>
+            <h3>Continuous Growth</h3>
+            <p>
+              Started with basic Django concepts, now building full-stack
+              applications. The journey from backend to DevOps continues.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+      <div class="container">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-number" data-target="5">0</div>
+            <div class="stat-label">Months Learning Django</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" data-target="1">0</div>
+            <div class="stat-label">CRUD Applications Built</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" data-target="100">0</div>
+            <div class="stat-label">Problems Solved</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" data-target="∞">0</div>
+            <div class="stat-label">Goals Ahead</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      // Typing animation
+      const phrases = [
+        "Building CRUD operations...",
+        "Connecting frontend to backend...",
+        "Learning Django every day...",
+        "Solving complex problems...",
+        "Growing as a developer...",
+      ];
+
+      let phraseIndex = 0;
+      let charIndex = 0;
+      let isDeleting = false;
+
+      function typeWriter() {
+        const currentPhrase = phrases[phraseIndex];
+        const typingElement = document.getElementById("typing-text");
+
+        if (isDeleting) {
+          typingElement.textContent = currentPhrase.substring(0, charIndex - 1);
+          charIndex--;
+        } else {
+          typingElement.textContent = currentPhrase.substring(0, charIndex + 1);
+          charIndex++;
+        }
+
+        if (!isDeleting && charIndex === currentPhrase.length) {
+          setTimeout(() => (isDeleting = true), 2000);
+        } else if (isDeleting && charIndex === 0) {
+          isDeleting = false;
+          phraseIndex = (phraseIndex + 1) % phrases.length;
+        }
+
+        const speed = isDeleting ? 50 : 100;
+        setTimeout(typeWriter, speed);
+      }
+
+      // Animate stats
+      function animateStats() {
+        const stats = document.querySelectorAll(".stat-number");
+        stats.forEach((stat) => {
+          const target = stat.getAttribute("data-target");
+          if (target === "∞") {
+            stat.textContent = "∞";
+            return;
+          }
+
+          let current = 0;
+          const increment = target / 50;
+          const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+              stat.textContent = target;
+              clearInterval(timer);
+            } else {
+              stat.textContent = Math.floor(current);
+            }
+          }, 30);
+        });
+      }
+
+      // Profile image click effect
+      document
+        .getElementById("profileImage")
+        .addEventListener("click", function () {
+          this.style.transform = "scale(1.1) rotate(360deg)";
+          setTimeout(() => {
+            this.style.transform = "scale(1) rotate(0deg)";
+          }, 1000);
+        });
+
+      // Initialize animations
+      document.addEventListener("DOMContentLoaded", function () {
+        typeWriter();
+
+        // Animate stats when they come into view
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              animateStats();
+              observer.unobserve(entry.target);
+            }
+          });
+        });
+
+        observer.observe(document.querySelector(".stats"));
+      });
+    </script>
+  </body>
+</html>
+
+{% endblock content %}
