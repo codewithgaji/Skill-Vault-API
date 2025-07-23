@@ -91,8 +91,11 @@ DATABASES = {
 }
 
 
-# For local development:
-CORS_ALLOW_ALL_ORIGINS = True  # ⚠️ Only for development
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5500",  # If testing locally
+    "https://skill-vault-api-production-f6fb.up.railway.app",
+    "https://your-frontend-domain.com"  # Optional, if deployed
+]
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

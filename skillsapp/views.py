@@ -97,13 +97,17 @@ def create_user(request):
 
 @api_view(["GET"])
 def get_users(request):
+    print("=== GET_USERS VIEW CALLED ===")
     users = UserModel.objects.all()
     serializer = UserSerializer(users, many=True)
+    print(f"Sending response: {serializer.data}")
     return Response(serializer.data)
-
 
 def about(request):
    return render(request, 'about.html')
 
 def skillvault(request):
   return render(request, 'index.html')
+
+def test_api(request):
+   return render(request, 'test_api.html')

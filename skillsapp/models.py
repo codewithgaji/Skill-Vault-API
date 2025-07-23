@@ -15,7 +15,7 @@ class UserModel(models.Model):
 class SkillModel(models.Model):
   class SkillLevel(models.TextChoices):
     BEGINNER = 'BEGINNER', 'Beginner'
-    INTERMEDIATE = 'INTERMIDIATE', 'Intermediate'
+    INTERMEDIATE = 'INTERMEDIATE', 'Intermediate'
     ADVANCED = 'ADVANCED', 'Advanced'
 
   user = models.ForeignKey(UserModel, related_name='skills', on_delete=models.CASCADE)

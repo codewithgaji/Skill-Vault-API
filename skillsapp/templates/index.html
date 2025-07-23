@@ -10,7 +10,6 @@
       href="{% static 'images/SkillApi.png' %}"
       type="image/x-icon"
     />
-
     <link rel="stylesheet" href="{% static 'style.css' %}" />
   </head>
   <body>
@@ -64,9 +63,9 @@
             />
             <select name="level" required>
               <option value="">-- Select Level --</option>
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
+              <option value="BEGINNER">BEGINNER</option>
+              <option value="INTERMEDIATE">INTERMEDIATE</option>
+              <option value="ADVANCED">ADVANCED</option>
             </select>
             <select name="user" id="user-select" required>
               <option value="">-- Select User --</option>
@@ -114,9 +113,9 @@
             />
             <select name="level">
               <option value="">-- Update Level (optional) --</option>
-              <option value="Beginner">Beginner</option>
-              <option value="Intermediate">Intermediate</option>
-              <option value="Advanced">Advanced</option>
+              <option value="BEGINNER">BEGINNER</option>
+              <option value="INTERMEDIATE">INTERMEDIATE</option>
+              <option value="ADVANCED">ADVANCED</option>
             </select>
             <select name="user" id="update-user-select" required>
               <option value="">-- Select User --</option>
@@ -164,8 +163,7 @@
     <script>
       const BASE_URL =
         "https://skill-vault-api-production-f6fb.up.railway.app/";
-
-      // Enhanced fetch function with better error handling
+      // Enhanced fetch function
       async function makeRequest(url, options = {}) {
         try {
           const defaultHeaders = {
@@ -181,20 +179,14 @@
             },
           };
 
-          console.log(`Making request to: ${url}`, config);
-
           const response = await fetch(url, config);
-
-          console.log(`Response status: ${response.status}`, response);
 
           if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`HTTP ${response.status}: ${errorText}`);
           }
 
-          const data = await response.json();
-          console.log("Response data:", data);
-          return data;
+          return await response.json();
         } catch (error) {
           console.error("Request failed:", error);
           throw error;
@@ -224,36 +216,79 @@
         const element = document.getElementById(elementId);
         element.textContent = message;
         element.className = `result ${type}`;
+
+        setTimeout(() => {
+          element.textContent = "";
+          element.className = "result";
+        }, 5000);
       }
 
-      // Load users into dropdown
+      // Load users into dropdown - DEBUG VERSION
       async function loadUsers() {
         try {
-          console.log("Loading users...");
           const users = await makeRequest(BASE_URL + "get_users/");
+
+          // DEBUG: Log the actual API response structure
+          console.log("=== USER API RESPONSE DEBUG ===");
+          console.log("Full API response:", users);
+          console.log("Is array?", Array.isArray(users));
+          console.log("Response length:", users?.length);
+
+          if (Array.isArray(users) && users.length > 0) {
+            console.log("First user object:", users[0]);
+            console.log("First user keys:", Object.keys(users[0]));
+          }
 
           const userSelect = document.getElementById("user-select");
           const updateUserSelect =
             document.getElementById("update-user-select");
 
+          // Clear existing options
           userSelect.innerHTML = '<option value="">-- Select User --</option>';
           updateUserSelect.innerHTML =
             '<option value="">-- Select User --</option>';
 
-          if (Array.isArray(users)) {
-            users.forEach((user) => {
-              const option = document.createElement("option");
-              option.value = user.id;
-              option.textContent = `${user.first_name} ${user.last_name} (${user.email})`;
-              userSelect.appendChild(option);
+          if (Array.isArray(users) && users.length > 0) {
+            users.forEach((user, index) => {
+              console.log(`User ${index}:`, user);
 
-              // Clone for update form
-              const updateOption = option.cloneNode(true);
-              updateUserSelect.appendChild(updateOption);
+              // Try multiple possible ID field names
+              const userId = user.id || user.pk || user.user_id || user.ID;
+
+              console.log(`User ${index} ID found:`, userId);
+
+              if (userId) {
+                const option = document.createElement("option");
+                option.value = userId.toString();
+                option.textContent = `${user.first_name} ${user.last_name} (${user.email})`;
+                userSelect.appendChild(option);
+
+                // Clone for update form
+                const updateOption = option.cloneNode(true);
+                updateUserSelect.appendChild(updateOption);
+
+                console.log(
+                  `Added option: value="${userId}", text="${option.textContent}"`
+                );
+              } else {
+                console.warn(`No valid ID found for user:`, user);
+              }
             });
-            console.log(`Loaded ${users.length} users`);
+
+            console.log(
+              `Total options added: ${userSelect.options.length - 1}`
+            );
+            displayResult(
+              "user-result",
+              `${users.length} users loaded successfully`,
+              "success"
+            );
           } else {
-            console.log("Users response:", users);
+            displayResult(
+              "user-result",
+              "No users found. Create a user first.",
+              "info"
+            );
           }
         } catch (error) {
           console.error("Failed to load users:", error);
@@ -270,24 +305,30 @@
         .getElementById("user-form")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
-          e.stopPropagation();
+
+          const form = e.target;
+          const submitButton = form.querySelector('button[type="submit"]');
 
           try {
-            // Disable the form to prevent double submissions
-            const form = e.target;
-            const submitButton = form.querySelector('button[type="submit"]');
             submitButton.disabled = true;
             submitButton.textContent = "Creating...";
 
-            const formData = new FormData(e.target);
+            const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
 
-            // Validate required fields
-            if (!data.first_name || !data.last_name || !data.email) {
+            // Basic validation
+            if (
+              !data.first_name?.trim() ||
+              !data.last_name?.trim() ||
+              !data.email?.trim()
+            ) {
               throw new Error("Please fill in all required fields");
             }
 
-            console.log("Creating user with data:", data);
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(data.email)) {
+              throw new Error("Please enter a valid email address");
+            }
 
             const result = await makeRequest(BASE_URL + "create_user/", {
               method: "POST",
@@ -300,56 +341,75 @@
               "success"
             );
             form.reset();
-            await loadUsers(); // Refresh dropdown
+
+            // Reload users to update dropdowns
+            await loadUsers();
           } catch (error) {
-            console.error("Create user error:", error);
             displayResult("user-result", `Error: ${error.message}`, "error");
           } finally {
-            // Re-enable the form
-            const submitButton = e.target.querySelector(
-              'button[type="submit"]'
-            );
             submitButton.disabled = false;
             submitButton.textContent = "Create User";
           }
         });
 
-      // Create Skill
+      // Create Skill - FIXED VERSION
       document
         .getElementById("create-form")
         .addEventListener("submit", async (e) => {
           e.preventDefault();
-          e.stopPropagation();
+
+          const form = e.target;
+          const submitButton = form.querySelector('button[type="submit"]');
 
           try {
-            // Disable the form to prevent double submissions
-            const form = e.target;
-            const submitButton = form.querySelector('button[type="submit"]');
             submitButton.disabled = true;
             submitButton.textContent = "Creating...";
 
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
+            const formData = new FormData(form);
+            const rawData = Object.fromEntries(formData.entries());
 
             // Validate required fields
+            if (!rawData.title?.trim()) {
+              throw new Error("Skill title is required");
+            }
+            if (!rawData.level) {
+              throw new Error("Skill level is required");
+            }
+            if (!rawData.user || rawData.user === "") {
+              throw new Error("Please select a user from the dropdown");
+            }
             if (
-              !data.title ||
-              !data.level ||
-              !data.user ||
-              !data.years_of_experience
+              !rawData.years_of_experience ||
+              rawData.years_of_experience === ""
             ) {
-              throw new Error("Please fill in all required fields");
+              throw new Error("Years of experience is required");
             }
 
-            // Convert numeric fields
-            data.years_of_experience = parseInt(data.years_of_experience);
-            data.user = parseInt(data.user);
+            // Convert and validate numeric fields
+            const userId = parseInt(rawData.user);
+            const yearsExp = parseInt(rawData.years_of_experience);
 
-            console.log("Creating skill with data:", data);
+            if (isNaN(userId) || userId <= 0) {
+              throw new Error("Invalid user selection");
+            }
+            if (isNaN(yearsExp) || yearsExp < 0) {
+              throw new Error(
+                "Invalid years of experience - must be a positive number"
+              );
+            }
+
+            // Prepare clean data for API
+            const cleanData = {
+              title: rawData.title.trim(),
+              level: rawData.level,
+              user: userId, // This is now guaranteed to be a valid integer
+              years_of_experience: yearsExp,
+              description: rawData.description?.trim() || "",
+            };
 
             const result = await makeRequest(BASE_URL + "create/", {
               method: "POST",
-              body: JSON.stringify(data),
+              body: JSON.stringify(cleanData),
             });
 
             displayResult(
@@ -360,13 +420,8 @@
             form.reset();
             fetchSkills();
           } catch (error) {
-            console.error("Create skill error:", error);
             displayResult("create-result", `Error: ${error.message}`, "error");
           } finally {
-            // Re-enable the form
-            const submitButton = e.target.querySelector(
-              'button[type="submit"]'
-            );
             submitButton.disabled = false;
             submitButton.textContent = "Create Skill";
           }
@@ -375,9 +430,7 @@
       // Fetch Skills
       async function fetchSkills() {
         try {
-          console.log("Fetching skills...");
           const data = await makeRequest(BASE_URL + "skills_set/");
-
           const list = document.getElementById("skill-list");
           list.innerHTML = "";
 
@@ -385,28 +438,19 @@
             data.Skills.forEach((skill) => {
               const li = document.createElement("li");
               li.innerHTML = `
-                            <strong>ID ${skill.id}:</strong> ${
-                skill.title || skill.name
-              } 
-                            <br><small>Level: ${
-                              skill.level || skill.category
-                            } | Experience: ${
-                skill.years_of_experience
-              } years</small>
-                            ${
-                              skill.description
-                                ? `<br><em>${skill.description}</em>`
-                                : ""
-                            }
-                        `;
+                <strong>ID ${skill.id}:</strong> ${skill.title || skill.name} 
+                <br><small>Level: ${
+                  skill.level || skill.category
+                } | Experience: ${skill.years_of_experience} years</small>
+                <br><small>User: ${skill.user_name || "N/A"}</small>
+                ${skill.description ? `<br><em>${skill.description}</em>` : ""}
+              `;
               list.appendChild(li);
             });
-            console.log(`Loaded ${data.Skills.length} skills`);
           } else {
             list.innerHTML = "<li>No skills found</li>";
           }
         } catch (error) {
-          console.error("Failed to fetch skills:", error);
           const list = document.getElementById("skill-list");
           list.innerHTML = `<li style="color: red;">Error: ${error.message}</li>`;
         }
@@ -418,15 +462,25 @@
         .addEventListener("submit", async (e) => {
           e.preventDefault();
 
+          const form = e.target;
+          const submitButton = form.querySelector('button[type="submit"]');
+
           try {
-            const formData = new FormData(e.target);
+            submitButton.disabled = true;
+            submitButton.textContent = "Updating...";
+
+            const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             const id = data.id;
             delete data.id;
 
-            // Validate required fields - user must be selected for update
-            if (!data.user) {
-              throw new Error("Please select a user - this field is required");
+            if (!id) {
+              throw new Error("Skill ID is required");
+            }
+            if (!data.user || data.user === "") {
+              throw new Error(
+                "Please select a user - this field is required for updates"
+              );
             }
 
             // Remove empty fields except for required ones
@@ -437,14 +491,19 @@
             });
 
             // Convert numeric fields
-            if (data.years_of_experience) {
-              data.years_of_experience = parseInt(data.years_of_experience);
-            }
-            if (data.user) {
-              data.user = parseInt(data.user);
+            if (data.years_of_experience !== undefined) {
+              const yearsExp = parseInt(data.years_of_experience);
+              if (isNaN(yearsExp) || yearsExp < 0) {
+                throw new Error("Invalid years of experience");
+              }
+              data.years_of_experience = yearsExp;
             }
 
-            console.log(`Updating skill ${id} with data:`, data);
+            const userId = parseInt(data.user);
+            if (isNaN(userId) || userId <= 0) {
+              throw new Error("Invalid user selection");
+            }
+            data.user = userId;
 
             const result = await makeRequest(BASE_URL + `update_skill/${id}/`, {
               method: "PUT",
@@ -456,10 +515,13 @@
               result.Message || "Skill updated successfully!",
               "success"
             );
-            e.target.reset();
+            form.reset();
             fetchSkills();
           } catch (error) {
             displayResult("update-result", `Error: ${error.message}`, "error");
+          } finally {
+            submitButton.disabled = false;
+            submitButton.textContent = "Update Skill";
           }
         });
 
@@ -473,9 +535,11 @@
             const formData = new FormData(e.target);
             const id = formData.get("id");
 
-            if (confirm(`Are you sure you want to delete skill ID ${id}?`)) {
-              console.log(`Deleting skill ${id}`);
+            if (!id) {
+              throw new Error("Skill ID is required");
+            }
 
+            if (confirm(`Are you sure you want to delete skill ID ${id}?`)) {
               const result = await makeRequest(
                 BASE_URL + `delete_skill/${id}/`,
                 {
@@ -498,15 +562,25 @@
 
       // Initialize the application
       async function initApp() {
-        console.log("Initializing SkillVault application...");
+        try {
+          const isConnected = await checkConnection();
 
-        const isConnected = await checkConnection();
-
-        if (isConnected) {
-          await loadUsers();
-          await fetchSkills();
-        } else {
-          console.log("API not available, some features may not work");
+          if (isConnected) {
+            await loadUsers();
+            await fetchSkills();
+          } else {
+            displayResult(
+              "create-result",
+              "API connection failed - check server status",
+              "error"
+            );
+          }
+        } catch (error) {
+          displayResult(
+            "create-result",
+            `Initialization error: ${error.message}`,
+            "error"
+          );
         }
       }
 
