@@ -1,0 +1,513 @@
+{% block content %} {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SkillVault - CRUD Interface</title>
+    <link rel="shortcut icon" href="{% static 'images/SkillApi.png' %}" type="image/x-icon">
+
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+  </head>
+  <body>
+    <div class="top-nav">
+      <a href="{% url 'about' %}" class="about-link">About Me</a>
+    </div>
+
+    <div class="container">
+      <h1>💼 SkillVault</h1>
+
+      <div class="connection-status">
+        <span
+          id="connection-indicator"
+          class="status-indicator status-disconnected"
+        ></span>
+        <span id="connection-text">Checking connection...</span>
+      </div>
+
+      <div class="sections-grid">
+        <!-- Create User Section -->
+        <section>
+          <h2>👤 Create User</h2>
+          <form id="user-form" method="post" onsubmit="return false;">
+            <input
+              type="text"
+              name="first_name"
+              placeholder="First Name"
+              required
+            />
+            <input
+              type="text"
+              name="last_name"
+              placeholder="Last Name"
+              required
+            />
+            <input type="email" name="email" placeholder="Email" required />
+            <button type="submit">Create User</button>
+          </form>
+          <div id="user-result" class="result"></div>
+        </section>
+
+        <!-- Create Skill Section -->
+        <section>
+          <h2>🎯 Create Skill</h2>
+          <form id="create-form" method="post" onsubmit="return false;">
+            <input
+              type="text"
+              name="title"
+              placeholder="Skill Title"
+              required
+            />
+            <select name="level" required>
+              <option value="">-- Select Level --</option>
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+            <select name="user" id="user-select" required>
+              <option value="">-- Select User --</option>
+            </select>
+            <textarea
+              name="description"
+              placeholder="Skill Description"
+            ></textarea>
+            <input
+              type="number"
+              name="years_of_experience"
+              placeholder="Years of Experience"
+              min="0"
+              max="50"
+              required
+            />
+            <button type="submit">Create Skill</button>
+          </form>
+          <div id="create-result" class="result"></div>
+        </section>
+
+        <!-- View Skills Section -->
+        <section>
+          <h2>📋 All Skills</h2>
+          <button onclick="fetchSkills()" type="button">
+            🔄 Refresh Skills
+          </button>
+          <ul id="skill-list"></ul>
+        </section>
+
+        <!-- Update Skill Section -->
+        <section>
+          <h2>✏️ Update Skill</h2>
+          <form id="update-form">
+            <input
+              type="number"
+              name="id"
+              placeholder="Skill ID to Update"
+              required
+            />
+            <input
+              type="text"
+              name="title"
+              placeholder="New Title (optional)"
+            />
+            <select name="level">
+              <option value="">-- Update Level (optional) --</option>
+              <option value="Beginner">Beginner</option>
+              <option value="Intermediate">Intermediate</option>
+              <option value="Advanced">Advanced</option>
+            </select>
+            <select name="user" id="update-user-select" required>
+              <option value="">-- Select User --</option>
+            </select>
+            <textarea
+              name="description"
+              placeholder="New Description (optional)"
+            ></textarea>
+            <input
+              type="number"
+              name="years_of_experience"
+              placeholder="Years of Experience"
+              min="0"
+              max="50"
+            />
+            <button type="submit">Update Skill</button>
+          </form>
+          <div id="update-result" class="result"></div>
+        </section>
+
+        <!-- Delete Skill Section -->
+        <section>
+          <h2>🗑️ Delete Skill</h2>
+          <form id="delete-form">
+            <input
+              type="number"
+              name="id"
+              placeholder="Skill ID to Delete"
+              required
+            />
+            <button
+              type="submit"
+              style="
+                background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+              "
+            >
+              Delete Skill
+            </button>
+          </form>
+          <div id="delete-result" class="result"></div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const BASE_URL = "http://localhost:8000/skills/";
+
+      // Enhanced fetch function with better error handling
+      async function makeRequest(url, options = {}) {
+        try {
+          const defaultHeaders = {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          };
+
+          const config = {
+            ...options,
+            headers: {
+              ...defaultHeaders,
+              ...options.headers,
+            },
+          };
+
+          console.log(`Making request to: ${url}`, config);
+
+          const response = await fetch(url, config);
+
+          console.log(`Response status: ${response.status}`, response);
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+          }
+
+          const data = await response.json();
+          console.log("Response data:", data);
+          return data;
+        } catch (error) {
+          console.error("Request failed:", error);
+          throw error;
+        }
+      }
+
+      // Check API connection
+      async function checkConnection() {
+        const indicator = document.getElementById("connection-indicator");
+        const text = document.getElementById("connection-text");
+
+        try {
+          await makeRequest(BASE_URL + "skills_set/");
+          indicator.className = "status-indicator status-connected";
+          text.textContent = "Connected to API";
+          return true;
+        } catch (error) {
+          indicator.className = "status-indicator status-disconnected";
+          text.textContent =
+            "API Connection Failed - Check if Django server is running";
+          return false;
+        }
+      }
+
+      // Display result messages
+      function displayResult(elementId, message, type = "info") {
+        const element = document.getElementById(elementId);
+        element.textContent = message;
+        element.className = `result ${type}`;
+      }
+
+      // Load users into dropdown
+      async function loadUsers() {
+        try {
+          console.log("Loading users...");
+          const users = await makeRequest(BASE_URL + "get_users/");
+
+          const userSelect = document.getElementById("user-select");
+          const updateUserSelect =
+            document.getElementById("update-user-select");
+
+          userSelect.innerHTML = '<option value="">-- Select User --</option>';
+          updateUserSelect.innerHTML =
+            '<option value="">-- Select User --</option>';
+
+          if (Array.isArray(users)) {
+            users.forEach((user) => {
+              const option = document.createElement("option");
+              option.value = user.id;
+              option.textContent = `${user.first_name} ${user.last_name} (${user.email})`;
+              userSelect.appendChild(option);
+
+              // Clone for update form
+              const updateOption = option.cloneNode(true);
+              updateUserSelect.appendChild(updateOption);
+            });
+            console.log(`Loaded ${users.length} users`);
+          } else {
+            console.log("Users response:", users);
+          }
+        } catch (error) {
+          console.error("Failed to load users:", error);
+          displayResult(
+            "user-result",
+            `Failed to load users: ${error.message}`,
+            "error"
+          );
+        }
+      }
+
+      // Create User
+      document
+        .getElementById("user-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          try {
+            // Disable the form to prevent double submissions
+            const form = e.target;
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = "Creating...";
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            // Validate required fields
+            if (!data.first_name || !data.last_name || !data.email) {
+              throw new Error("Please fill in all required fields");
+            }
+
+            console.log("Creating user with data:", data);
+
+            const result = await makeRequest(BASE_URL + "create_user/", {
+              method: "POST",
+              body: JSON.stringify(data),
+            });
+
+            displayResult(
+              "user-result",
+              result.Message || "User created successfully!",
+              "success"
+            );
+            form.reset();
+            await loadUsers(); // Refresh dropdown
+          } catch (error) {
+            console.error("Create user error:", error);
+            displayResult("user-result", `Error: ${error.message}`, "error");
+          } finally {
+            // Re-enable the form
+            const submitButton = e.target.querySelector(
+              'button[type="submit"]'
+            );
+            submitButton.disabled = false;
+            submitButton.textContent = "Create User";
+          }
+        });
+
+      // Create Skill
+      document
+        .getElementById("create-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+
+          try {
+            // Disable the form to prevent double submissions
+            const form = e.target;
+            const submitButton = form.querySelector('button[type="submit"]');
+            submitButton.disabled = true;
+            submitButton.textContent = "Creating...";
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            // Validate required fields
+            if (
+              !data.title ||
+              !data.level ||
+              !data.user ||
+              !data.years_of_experience
+            ) {
+              throw new Error("Please fill in all required fields");
+            }
+
+            // Convert numeric fields
+            data.years_of_experience = parseInt(data.years_of_experience);
+            data.user = parseInt(data.user);
+
+            console.log("Creating skill with data:", data);
+
+            const result = await makeRequest(BASE_URL + "create/", {
+              method: "POST",
+              body: JSON.stringify(data),
+            });
+
+            displayResult(
+              "create-result",
+              result.Message || "Skill created successfully!",
+              "success"
+            );
+            form.reset();
+            fetchSkills();
+          } catch (error) {
+            console.error("Create skill error:", error);
+            displayResult("create-result", `Error: ${error.message}`, "error");
+          } finally {
+            // Re-enable the form
+            const submitButton = e.target.querySelector(
+              'button[type="submit"]'
+            );
+            submitButton.disabled = false;
+            submitButton.textContent = "Create Skill";
+          }
+        });
+
+      // Fetch Skills
+      async function fetchSkills() {
+        try {
+          console.log("Fetching skills...");
+          const data = await makeRequest(BASE_URL + "skills_set/");
+
+          const list = document.getElementById("skill-list");
+          list.innerHTML = "";
+
+          if (data.Skills && Array.isArray(data.Skills)) {
+            data.Skills.forEach((skill) => {
+              const li = document.createElement("li");
+              li.innerHTML = `
+                            <strong>ID ${skill.id}:</strong> ${
+                skill.title || skill.name
+              } 
+                            <br><small>Level: ${
+                              skill.level || skill.category
+                            } | Experience: ${
+                skill.years_of_experience
+              } years</small>
+                            ${
+                              skill.description
+                                ? `<br><em>${skill.description}</em>`
+                                : ""
+                            }
+                        `;
+              list.appendChild(li);
+            });
+            console.log(`Loaded ${data.Skills.length} skills`);
+          } else {
+            list.innerHTML = "<li>No skills found</li>";
+          }
+        } catch (error) {
+          console.error("Failed to fetch skills:", error);
+          const list = document.getElementById("skill-list");
+          list.innerHTML = `<li style="color: red;">Error: ${error.message}</li>`;
+        }
+      }
+
+      // Update Skill
+      document
+        .getElementById("update-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          try {
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const id = data.id;
+            delete data.id;
+
+            // Validate required fields - user must be selected for update
+            if (!data.user) {
+              throw new Error("Please select a user - this field is required");
+            }
+
+            // Remove empty fields except for required ones
+            Object.keys(data).forEach((key) => {
+              if ((data[key] === "" || data[key] === null) && key !== "user") {
+                delete data[key];
+              }
+            });
+
+            // Convert numeric fields
+            if (data.years_of_experience) {
+              data.years_of_experience = parseInt(data.years_of_experience);
+            }
+            if (data.user) {
+              data.user = parseInt(data.user);
+            }
+
+            console.log(`Updating skill ${id} with data:`, data);
+
+            const result = await makeRequest(BASE_URL + `update_skill/${id}/`, {
+              method: "PUT",
+              body: JSON.stringify(data),
+            });
+
+            displayResult(
+              "update-result",
+              result.Message || "Skill updated successfully!",
+              "success"
+            );
+            e.target.reset();
+            fetchSkills();
+          } catch (error) {
+            displayResult("update-result", `Error: ${error.message}`, "error");
+          }
+        });
+
+      // Delete Skill
+      document
+        .getElementById("delete-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          try {
+            const formData = new FormData(e.target);
+            const id = formData.get("id");
+
+            if (confirm(`Are you sure you want to delete skill ID ${id}?`)) {
+              console.log(`Deleting skill ${id}`);
+
+              const result = await makeRequest(
+                BASE_URL + `delete_skill/${id}/`,
+                {
+                  method: "DELETE",
+                }
+              );
+
+              displayResult(
+                "delete-result",
+                result.Message || "Skill deleted successfully!",
+                "success"
+              );
+              e.target.reset();
+              fetchSkills();
+            }
+          } catch (error) {
+            displayResult("delete-result", `Error: ${error.message}`, "error");
+          }
+        });
+
+      // Initialize the application
+      async function initApp() {
+        console.log("Initializing SkillVault application...");
+
+        const isConnected = await checkConnection();
+
+        if (isConnected) {
+          await loadUsers();
+          await fetchSkills();
+        } else {
+          console.log("API not available, some features may not work");
+        }
+      }
+
+      // Start the application when DOM is loaded
+      document.addEventListener("DOMContentLoaded", initApp);
+    </script>
+  </body>
+</html>
+{% endblock content %}
