@@ -15,7 +15,7 @@ This project was primarily built to:
 - Practice real-world API design and testing.
 - Simulate a minimal version of a job-seeking platform where:
   - Users can **create and manage** their profiles.
-  - Employers can **view, update, or delete** user records based on relevance
+  - Employers can **view, update, or delete** user records based on relevance.
 
 ---
 
