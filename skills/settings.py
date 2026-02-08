@@ -76,20 +76,24 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'skills.wsgi.application'
 
-
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-      'default': {
-          'ENGINE': 'django.db.backends.postgresql',
-          'NAME': 'railway',
-          'USER': 'postgres',
-          'PASSWORD': 'YxGgjkHPdMAcylcEpISwOwcProsVqHoU',
-          'HOST': 'shortline.proxy.rlwy.net',
-          'PORT': '28916',
-      }
-  }
+    "default": dj_database_url.config(
+        default=os.getenv("DATABASE_URL"),
+        conn_max_age=60,
+    )
+}
+print("DATABASE_URL exists? ", bool(os.getenv("DATABASE_URL")))
+
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5500",  # If testing locally
+    "https://skill-vault-api-production-f6fb.up.railway.app",
+    "https://your-frontend-domain.com"  # Optional, if deployed
+]
+
 
 
 # For local development:
